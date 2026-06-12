@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<meta name="theme-color" content="#1B4332"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="FitPlan"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<title>FitPlan</title>
+<script src="exercises.js"></script>
+<script src="muscles.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --gd:#1B4332;--gm:#2D6A4F;--ga:#52B788;--gp:#D8F3DC;--gp2:#F0FAF3;
+  --bd:#1A3A5C;--bm:#1E4F8C;--ba:#4A90D9;--bp:#DBEAFE;
+  --gray:#6B7280;--orange:#F4845F;--yellow:#FFD166;--red:#EF4444;--purple:#7C3AED;
+  --white:#fff;--text:#111827;--soft:#6B7280;--bg:#F9FAFB;
+  --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)
+}
+html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;overscroll-behavior:none}
+#app{max-width:480px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+/* NAV */
+#bnav{display:flex;background:#fff;border-top:1px solid #E5E7EB;padding-bottom:var(--sb);flex-shrink:0;z-index:100}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0 6px;border:none;background:transparent;cursor:pointer;gap:2px}
+.nb .ni{font-size:18px}.nb .nl{font-size:9px;font-weight:600;color:#9CA3AF;letter-spacing:.3px}
+.nb.active .nl{color:var(--gd)}.ndot{width:4px;height:4px;border-radius:50%;background:var(--ga);opacity:0;transition:opacity .2s}.nb.active .ndot{opacity:1}
+/* SCREENS */
+.scr{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;display:none}
+.scr.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+/* HEADERS */
+.phdr{padding:calc(var(--st)+14px) 18px 14px;transition:background .3s}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.5);margin-bottom:3px;text-transform:uppercase}
+.htitle{font-size:26px;font-weight:900;color:#fff;line-height:1.1}
+.htag{display:inline-block;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:800;margin-top:5px}
+/* DAY TABS */
+#dtabs{display:flex;background:#fff;border-bottom:1px solid #E5E7EB;overflow-x:auto;scrollbar-width:none;padding:0 4px;flex-shrink:0}
+#dtabs::-webkit-scrollbar{display:none}
+.dtab{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;padding:8px 10px 5px;border:none;background:transparent;cursor:pointer;border-bottom:3px solid transparent;gap:3px}
+.dtab .tl{font-size:11px;font-weight:700;color:#9CA3AF}
+.dtab.ap .tl{color:var(--gd)}.dtab.ap{border-color:var(--ga)}
+.dtab.ac .tl{color:var(--bd)}.dtab.ac{border-color:var(--ba)}
+.dtab.ar .tl{color:var(--gray)}.dtab.ar{border-color:var(--gray)}
+.tdot{width:6px;height:6px;border-radius:50%}
+/* STATS BAR */
+.sbar{display:flex;gap:6px;padding:12px 12px 6px}
+.sc{flex:1;border-radius:10px;padding:8px 4px;text-align:center}
+.sv{font-size:12px;font-weight:800}.sl{font-size:9px;color:var(--soft);margin-top:1px}
+.slabel{padding:5px 14px 3px;font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:1px;text-transform:uppercase}
+/* EXERCISE CARDS */
+.exlist{padding:0 10px}
+.exc{background:#fff;border-radius:12px;overflow:hidden;margin-bottom:8px;border:1.5px solid #E5E7EB;transition:border-color .2s,box-shadow .2s}
+.exc.open{border-color:var(--ga);box-shadow:0 3px 14px rgba(0,0,0,.09)}
+.exc.open.pull{border-color:var(--ba)}
+.exh{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;user-select:none;background:#fff}
+.thumb{width:44px;height:44px;border-radius:9px;overflow:hidden;flex-shrink:0;background:#E5E7EB;position:relative}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.play-badge{position:absolute;bottom:2px;right:2px;background:rgba(229,0,0,.9);border-radius:3px;padding:1px 3px;font-size:8px;color:#fff;font-weight:700}
+.exinfo{flex:1}.exn{font-size:13px;font-weight:700;color:var(--gd)}.exm{font-size:10px;color:var(--soft);margin-top:1px}
+.ex-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.exsets{background:var(--gd);color:#fff;border-radius:7px;padding:3px 8px;font-size:11px;font-weight:700;white-space:nowrap}
+.done-badge{background:var(--ga);color:var(--gd);border-radius:7px;padding:2px 7px;font-size:10px;font-weight:800;display:none}
+.exc.done-ex .done-badge{display:block}
+.exc.done-ex .exh{background:#F0FAF3}
+.exch{font-size:11px;color:var(--ga);transition:transform .2s}
+.exc.open .exch{transform:rotate(180deg)}
+.exdet{display:none;padding:0 12px 12px}
+.exc.open .exdet{display:block}
+.exdiv{height:1px;background:#F3F4F6;margin-bottom:10px}
+/* MEDIA TABS */
+.media-tabs{display:flex;gap:6px;margin-bottom:10px}
+.mtab-btn{flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid #E5E7EB;background:#fff;font-size:11px;font-weight:700;color:var(--soft);cursor:pointer;transition:all .15s;text-align:center}
+.mtab-btn.active{background:var(--gd);color:#fff;border-color:var(--gd)}
+.media-panel{display:none}.media-panel.active{display:block}
+/* ANIMATION SVG */
+.anim-container{width:100%;background:linear-gradient(135deg,#1B4332 0%,#2D6A4F 100%);border-radius:10px;overflow:hidden;margin-bottom:10px;position:relative;min-height:160px;display:flex;align-items:center;justify-content:center}
+.anim-container svg{max-width:100%;height:160px}
+/* VIDEO */
+.vid-placeholder{width:100%;aspect-ratio:16/9;border-radius:10px;background:linear-gradient(135deg,#1B4332,#2D6A4F);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;margin-bottom:10px}
+.vid-play-btn{width:48px;height:48px;background:rgba(255,255,255,.9);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:6px}
+.vid-play-btn::after{content:'';display:block;width:0;height:0;border-style:solid;border-width:9px 0 9px 16px;border-color:transparent transparent transparent #1B4332;margin-left:3px}
+.vid-title{color:#fff;font-size:11px;font-weight:700;text-align:center;padding:0 10px}
+.vid-sub{color:rgba(255,255,255,.6);font-size:9px;margin-top:3px}
+.vid-wrap{width:100%;border-radius:10px;overflow:hidden;background:#000;margin-bottom:10px;aspect-ratio:16/9}
+.vid-wrap iframe{width:100%;height:100%;border:none;display:block}
+/* ALTERNATIVES */
+.alt-section{margin-top:8px}
+.alt-title{font-size:10px;font-weight:700;color:#9CA3AF;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.alt-list{display:flex;flex-direction:column;gap:5px}
+.alt-item{background:#F9FAFB;border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px;border:1px solid #E5E7EB}
+.alt-icon{font-size:16px;flex-shrink:0}
+.alt-name{font-size:12px;font-weight:700;color:var(--text);flex:1}
+.alt-diff{font-size:10px;padding:2px 6px;border-radius:10px;font-weight:700}
+.diff-easy{background:#D8F3DC;color:#1B4332}
+.diff-same{background:#FFF0E6;color:#78350F}
+.diff-hard{background:#DBEAFE;color:#1E4F8C}
+/* TIP */
+.tip-box{background:#FFF8E1;border-left:3px solid var(--orange);border-radius:8px;padding:7px 9px;font-size:11px;color:#78350F;line-height:1.5;margin-bottom:7px}
+.tip-box strong{color:var(--orange)}
+.mtags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px}
+.mtag{font-size:9px;font-weight:600;background:var(--gp);color:var(--gd);border-radius:20px;padding:2px 7px}
+/* SET TRACKER */
+.set-tracker{background:#F0FAF3;border-radius:10px;padding:10px 12px;margin-bottom:8px;border:1px solid var(--gp)}
+.set-tracker-title{font-size:11px;font-weight:700;color:var(--gd);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.set-rows{display:flex;flex-direction:column;gap:5px}
+.set-row{display:flex;align-items:center;gap:8px}
+.set-num{font-size:11px;font-weight:700;color:var(--soft);width:32px}
+.weight-input{flex:1;border:1.5px solid #E5E7EB;border-radius:7px;padding:5px 8px;font-size:13px;font-weight:700;color:var(--gd);background:#fff;outline:none;text-align:center}
+.weight-input:focus{border-color:var(--ga)}
+.rep-input{width:52px;border:1.5px solid #E5E7EB;border-radius:7px;padding:5px 6px;font-size:13px;font-weight:700;color:var(--gd);background:#fff;outline:none;text-align:center}
+.set-done-btn{width:30px;height:30px;border-radius:50%;border:2px solid #E5E7EB;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;flex-shrink:0}
+.set-done-btn.done{background:var(--ga);border-color:var(--ga)}
+/* REST TIMER */
+.rest-timer-bar{background:#fff;border:1.5px solid var(--gp);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.timer-display{font-size:24px;font-weight:900;color:var(--gd);font-variant-numeric:tabular-nums;min-width:52px}
+.timer-display.urgent{color:var(--orange)}
+.timer-btns{display:flex;gap:6px;flex:1;justify-content:flex-end}
+.tbtn{padding:6px 12px;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer}
+.tbtn-start{background:var(--gd);color:#fff}
+.tbtn-stop{background:#FEE2E2;color:var(--red)}
+.tbtn-sec{background:var(--gp);color:var(--gd)}
+/* CARDIO */
+.cblock{margin:6px 10px 18px;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;color:#fff}
+.cion{font-size:26px}.ctit{font-weight:700;font-size:13px}.csub{font-size:11px;opacity:.75;margin-top:2px}
+/* REST DAY */
+.restsc{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 20px;text-align:center}
+.reme{font-size:64px;margin-bottom:14px}.retit{font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px}
+.resub{font-size:13px;color:var(--soft);line-height:1.6;max-width:240px}
+.rebox{margin-top:20px;background:var(--gp2);border:1.5px solid var(--gp);border-radius:12px;padding:14px 18px}
+.rebox-t{font-size:12px;font-weight:700;color:var(--gd);margin-bottom:5px}.rebox-s{font-size:12px;color:var(--soft)}
+/* PROGRESS SCREEN */
+.prog-hdr{padding:calc(var(--st)+14px) 18px 14px;background:linear-gradient(135deg,#1A3A5C,#1E4F8C)}
+.prog-htit{font-size:24px;font-weight:900;color:#fff}.prog-hsub{font-size:11px;color:rgba(255,255,255,.6);margin-top:3px}
+.prog-cards{padding:10px}
+.prog-card{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.prog-card-title{font-size:14px;font-weight:800;color:var(--gd);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+/* STREAK */
+.streak-row{display:flex;gap:5px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+.streak-day{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;cursor:pointer;border:2px solid #E5E7EB;color:var(--soft);background:#fff;transition:all .15s}
+.streak-day.done{background:var(--ga);border-color:var(--ga);color:#fff}
+.streak-day.rest-day{background:var(--gp2);border-color:var(--gp);color:var(--gd)}
+.streak-day.today{border-color:var(--gd);font-weight:800}
+.streak-stat{text-align:center;font-size:11px;color:var(--soft)}
+.streak-stat strong{color:var(--gd);font-size:16px;display:block;margin-bottom:2px}
+/* WEIGHT CHART */
+.weight-log-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.weight-date-lbl{font-size:11px;color:var(--soft);width:52px;flex-shrink:0}
+.weight-val-input{flex:1;border:1.5px solid #E5E7EB;border-radius:8px;padding:6px 10px;font-size:14px;font-weight:700;color:var(--gd);outline:none;background:#F9FAFB}
+.weight-val-input:focus{border-color:var(--ba);background:#fff}
+.weight-unit{font-size:12px;color:var(--soft);flex-shrink:0}
+.add-weight-btn{width:100%;padding:10px;border-radius:10px;border:none;background:var(--gd);color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px}
+/* MINI CHART */
+.mini-chart{width:100%;height:80px;position:relative;margin:8px 0}
+.chart-line{overflow:visible}
+/* MEASUREMENTS */
+.meas-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.meas-item{background:#F9FAFB;border-radius:10px;padding:10px 12px;border:1.5px solid #E5E7EB}
+.meas-label{font-size:10px;font-weight:700;color:var(--soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.meas-input{width:100%;border:none;background:transparent;font-size:18px;font-weight:800;color:var(--gd);outline:none}
+.meas-unit{font-size:10px;color:var(--soft);margin-top:2px}
+.save-meas-btn{width:100%;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,#1A3A5C,#1E4F8C);color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-top:10px}
+/* WEIGHT LOG TABLE */
+.wlog-table{width:100%;border-collapse:collapse;font-size:12px}
+.wlog-table th{text-align:left;padding:4px 6px;color:var(--soft);font-weight:600;border-bottom:1px solid #F3F4F6}
+.wlog-table td{padding:6px 6px;border-bottom:1px solid #F9FAFB;color:var(--text)}
+.wlog-table td:last-child{font-weight:700;color:var(--gd)}
+.wlog-diff-up{color:var(--red);font-size:10px}
+.wlog-diff-down{color:var(--ga);font-size:10px}
+/* PB TABLE */
+.pb-table{width:100%;border-collapse:collapse;font-size:12px}
+.pb-table th{text-align:left;padding:4px 6px;color:var(--soft);font-weight:600;border-bottom:1px solid #F3F4F6;font-size:10px;text-transform:uppercase}
+.pb-table td{padding:7px 6px;border-bottom:1px solid #F9FAFB;color:var(--text)}
+.pb-val{font-weight:800;color:var(--gd)}
+.pb-badge{background:var(--yellow);color:#78350F;font-size:9px;font-weight:800;border-radius:10px;padding:1px 6px}
+/* MEAL SCREEN */
+.mhdr{padding:calc(var(--st)+14px) 18px 14px;background:linear-gradient(135deg,#1B4332,#2D6A4F)}
+.mhtit{font-size:24px;font-weight:900;color:#fff}.mhsub{font-size:11px;color:rgba(255,255,255,.6);margin-top:3px}
+.macrow{display:flex;gap:6px;padding:10px 10px 4px}
+.mac{flex:1;border-radius:10px;padding:8px 4px;text-align:center}
+.macv{font-size:13px;font-weight:800;color:#fff}.macl{font-size:8px;font-weight:700;color:rgba(255,255,255,.7);margin-top:1px;letter-spacing:.5px}
+.dselrow{display:flex;gap:5px;padding:6px 10px;overflow-x:auto;scrollbar-width:none}
+.dselrow::-webkit-scrollbar{display:none}
+.dmb{flex:0 0 auto;padding:5px 12px;border-radius:20px;border:1.5px solid #E5E7EB;background:#fff;font-size:11px;font-weight:700;color:var(--soft);cursor:pointer;transition:all .15s}
+.dmb.active{background:var(--gd);color:#fff;border-color:var(--gd)}
+/* ALARM */
+.alarm-section{padding:6px 10px 2px}
+.alarm-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.alarm-title{font-size:12px;font-weight:800;color:var(--gd)}
+.alarm-perm-btn{font-size:10px;font-weight:700;color:#fff;background:var(--gd);border:none;border-radius:20px;padding:4px 10px;cursor:pointer}
+.alarm-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.alarm-card{background:#fff;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,.05);border:1.5px solid #E5E7EB}
+.alarm-card.active-alarm{border-color:var(--ga)}
+.alarm-icon{font-size:20px;flex-shrink:0}
+.alarm-info{flex:1}
+.alarm-name{font-size:12px;font-weight:700;color:var(--text)}
+.alarm-time-input{font-size:13px;font-weight:700;color:var(--gd);border:none;background:var(--gp);border-radius:7px;padding:3px 7px;cursor:pointer;outline:none;margin-top:3px}
+.alarm-toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.alarm-toggle input{opacity:0;width:0;height:0}
+.aslider{position:absolute;cursor:pointer;inset:0;background:#D1D5DB;border-radius:11px;transition:.3s}
+.aslider:before{content:"";position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+input:checked+.aslider{background:var(--ga)}
+input:checked+.aslider:before{transform:translateX(18px)}
+/* MEAL CARDS */
+.mcards{padding:4px 10px 18px}
+.mcard{background:#fff;border-radius:12px;overflow:hidden;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,.04)}
+.mchdr{display:flex;align-items:center;gap:9px;padding:9px 12px}
+.mbadge{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.mctit{font-size:12px;font-weight:700;color:var(--text)}.mckcal{font-size:10px;color:var(--soft);margin-top:1px}
+.mcbody{padding:7px 12px 10px;font-size:12px;color:#374151;line-height:1.6;border-top:1px solid #F9FAFB}
+.nightbanner{margin:0 10px 14px;background:linear-gradient(135deg,var(--gd),var(--gm));border-radius:12px;padding:12px 14px;color:#fff}
+.nbtit{font-weight:700;font-size:13px;margin-bottom:3px}.nbsub{font-size:11px;opacity:.8;line-height:1.5}
+/* INFO */
+.ihdr{padding:calc(var(--st)+14px) 18px 14px;background:linear-gradient(135deg,#3D1F00,#78350F)}
+.ihtit{font-size:24px;font-weight:900;color:#fff}.ihsub{font-size:11px;color:rgba(255,255,255,.6);margin-top:3px}
+.icards{padding:10px}
+.icard{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.ictit{font-size:13px;font-weight:800;color:var(--gd);margin-bottom:9px;display:flex;align-items:center;gap:6px}
+.rrow{display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:1px solid #F3F4F6;font-size:12px;color:#374151;line-height:1.5}
+.rrow:last-child{border-bottom:none}
+.rck{color:var(--ga);font-weight:700;flex-shrink:0}.rx{color:#EF4444;font-weight:700;flex-shrink:0}
+.prow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #F3F4F6}
+.prow:last-child{border-bottom:none}
+.plbl{font-size:12px;color:#374151}.pval{font-size:12px;font-weight:700;color:var(--gd)}
+/* TOAST */
+#toast{position:fixed;bottom:85px;left:50%;transform:translateX(-50%) translateY(16px);background:#1B4332;color:#fff;padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;opacity:0;transition:all .25s;pointer-events:none;z-index:999;white-space:nowrap;max-width:90vw}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* MODAL */
+#modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+#modal-overlay.show{display:flex}
+#modal-box{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px;max-height:80vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:800;color:var(--gd);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.modal-close{font-size:20px;cursor:pointer;color:var(--soft);background:none;border:none;line-height:1}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══ WORKOUT SCREEN ══ -->
+<div id="scr-workout" class="scr active">
+  <div id="whdr" class="phdr" style="background:linear-gradient(135deg,#1B4332,#2D6A4F)">
+    <div class="eyebrow">HAFTALIK ANTRENMAN PLANI</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end">
+      <div>
+        <div class="htitle" id="hday">Pazartesi</div>
+        <div class="htag" id="htag" style="background:#52B788;color:#1B4332">İTİŞ</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;color:rgba(255,255,255,.5)">Hedef</div>
+        <div style="font-size:11px;font-weight:700;color:#fff">Yağ Yak + Kas Koru</div>
+      </div>
+    </div>
+  </div>
+  <div id="dtabs">
+    <button class="dtab ap" onclick="selDay(0)"><span class="tl">PAZ</span><div class="tdot" style="background:#52B788"></div></button>
+    <button class="dtab" onclick="selDay(1)"><span class="tl">SAL</span><div class="tdot" style="background:#4A90D9"></div></button>
+    <button class="dtab" onclick="selDay(2)"><span class="tl">ÇAR</span><div class="tdot" style="background:#9CA3AF"></div></button>
+    <button class="dtab" onclick="selDay(3)"><span class="tl">PER</span><div class="tdot" style="background:#52B788"></div></button>
+    <button class="dtab" onclick="selDay(4)"><span class="tl">CUM</span><div class="tdot" style="background:#4A90D9"></div></button>
+    <button class="dtab" onclick="selDay(5)"><span class="tl">CTS</span><div class="tdot" style="background:#9CA3AF"></div></button>
+    <button class="dtab" onclick="selDay(6)"><span class="tl">PAZ</span><div class="tdot" style="background:#9CA3AF"></div></button>
+  </div>
+  <div id="dcontent"></div>
+</div>
+
+<!-- ══ PROGRESS SCREEN ══ -->
+<div id="scr-progress" class="scr">
+  <div class="prog-hdr">
+    <div class="prog-htit">📊 İlerleme</div>
+    <div class="prog-hsub">Kilo · Ölçü · Antrenman Geçmişi</div>
+  </div>
+  <div class="prog-cards">
+
+    <!-- Streak -->
+    <div class="prog-card">
+      <div class="prog-card-title">🔥 Bu Hafta Antrenman</div>
+      <div class="streak-row" id="streak-row"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:8px">
+        <div class="streak-stat"><strong id="streak-count">0</strong>Bu Hafta</div>
+        <div class="streak-stat"><strong id="total-workouts">0</strong>Toplam</div>
+        <div class="streak-stat"><strong id="streak-best">0</strong>En İyi Seri</div>
+      </div>
+    </div>
+
+    <!-- Kilo Takibi -->
+    <div class="prog-card">
+      <div class="prog-card-title">⚖️ Kilo Takibi</div>
+      <div class="weight-log-row">
+        <div class="weight-date-lbl" id="today-lbl">Bugün</div>
+        <input type="number" class="weight-val-input" id="weight-input" placeholder="95.0" step="0.1" min="40" max="200"/>
+        <div class="weight-unit">kg</div>
+      </div>
+      <button class="add-weight-btn" onclick="addWeight()">Kaydet</button>
+      <div style="margin-top:12px">
+        <svg id="weight-chart" class="mini-chart" viewBox="0 0 300 80" preserveAspectRatio="none"></svg>
+      </div>
+      <div style="margin-top:6px;overflow-x:auto">
+        <table class="wlog-table" id="wlog-table">
+          <tr><th>Tarih</th><th>Kilo</th><th>Fark</th></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Vücut Ölçüleri -->
+    <div class="prog-card">
+      <div class="prog-card-title">📏 Vücut Ölçüleri <span style="font-size:10px;color:var(--soft);font-weight:400">(cm)</span></div>
+      <div class="meas-grid">
+        <div class="meas-item"><div class="meas-label">Boyun</div><input class="meas-input" id="m-neck" type="number" placeholder="–"/><div class="meas-unit">cm</div></div>
+        <div class="meas-item"><div class="meas-label">Göğüs</div><input class="meas-input" id="m-chest" type="number" placeholder="–"/><div class="meas-unit">cm</div></div>
+        <div class="meas-item"><div class="meas-label">Bel</div><input class="meas-input" id="m-waist" type="number" placeholder="–"/><div class="meas-unit">cm</div></div>
+        <div class="meas-item"><div class="meas-label">Kalça</div><input class="meas-input" id="m-hip" type="number" placeholder="–"/><div class="meas-unit">cm</div></div>
+        <div class="meas-item"><div class="meas-label">Sol Kol</div><input class="meas-input" id="m-arm-l" type="number" placeholder="–"/><div class="meas-unit">cm</div></div>
+        <div class="meas-item"><div class="meas-label">Sağ Kol</div><input class="meas-input" id="m-arm-r" type="number" placeholder="–"/><div class="meas-unit">cm</div></div>
+        <div class="meas-item"><div class="meas-label">Sol Bacak</div><input class="meas-input" id="m-leg-l" type="number" placeholder="–"/><div class="meas-unit">cm</div></div>
+        <div class="meas-item"><div class="meas-label">Sağ Bacak</div><input class="meas-input" id="m-leg-r" type="number" placeholder="–"/><div class="meas-unit">cm</div></div>
+      </div>
+      <button class="save-meas-btn" onclick="saveMeasurements()">💾 Ölçüleri Kaydet</button>
+    </div>
+
+    <!-- Kişisel Rekortlar -->
+    <div class="prog-card">
+      <div class="prog-card-title">🏆 Kişisel Rekortlar</div>
+      <table class="pb-table" id="pb-table">
+        <tr><th>Hareket</th><th>Ağırlık</th><th>Tarih</th></tr>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ MEAL SCREEN ══ -->
+<div id="scr-meal" class="scr">
+  <div class="mhdr">
+    <div class="mhtit">🥗 Yemek Planı</div>
+    <div class="mhsub">Helal · Doğal · Protein Ağırlıklı</div>
+  </div>
+  <div class="macrow">
+    <div class="mac" style="background:#F4845F"><div class="macv">~2.100</div><div class="macl">KCAL</div></div>
+    <div class="mac" style="background:#52B788"><div class="macv">170g</div><div class="macl">PROTEİN</div></div>
+    <div class="mac" style="background:#4A90D9"><div class="macv">190g</div><div class="macl">KARB</div></div>
+    <div class="mac" style="background:#FFD166"><div class="macv" style="color:#1B4332">60g</div><div class="macl" style="color:rgba(27,67,50,.8)">YAĞ</div></div>
+  </div>
+  <div class="alarm-section">
+    <div class="alarm-header">
+      <div class="alarm-title">🔔 Öğün Alarmları</div>
+      <button class="alarm-perm-btn" onclick="requestNotifPerm()">İzin Ver</button>
+    </div>
+    <div class="alarm-grid" id="alarm-grid"></div>
+  </div>
+  <div class="dselrow" id="mdtabs">
+    <button class="dmb active" onclick="selMeal(0,this)">Pazartesi</button>
+    <button class="dmb" onclick="selMeal(1,this)">Salı</button>
+    <button class="dmb" onclick="selMeal(2,this)">Çarşamba</button>
+    <button class="dmb" onclick="selMeal(3,this)">Perşembe</button>
+    <button class="dmb" onclick="selMeal(4,this)">Cuma</button>
+    <button class="dmb" onclick="selMeal(5,this)">Cumartesi</button>
+    <button class="dmb" onclick="selMeal(6,this)">Pazar</button>
+  </div>
+  <div class="mcards" id="mcards"></div>
+</div>
+
+<!-- ══ INFO SCREEN ══ -->
+<div id="scr-info" class="scr">
+  <div class="ihdr">
+    <div class="ihtit">📋 Bilgiler</div>
+    <div class="ihsub">Kurallar · Hedefler · İpuçları</div>
+  </div>
+  <div class="icards">
+    <div class="icard">
+      <div class="ictit">📊 Profilim</div>
+      <div class="prow"><span class="plbl">Başlangıç Kilosu</span><span class="pval">95 kg</span></div>
+      <div class="prow"><span class="plbl">Boy</span><span class="pval">1.80 cm</span></div>
+      <div class="prow"><span class="plbl">VKİ</span><span class="pval">29.3 — Fazla Kilolu</span></div>
+      <div class="prow"><span class="plbl">Hedef Kilo</span><span class="pval">82-85 kg</span></div>
+      <div class="prow"><span class="plbl">Haftalık Hedef</span><span class="pval">0.5–1 kg yağ kaybı</span></div>
+    </div>
+    <div class="icard">
+      <div class="ictit">✅ Altın Kurallar</div>
+      <div class="rrow"><span class="rck">✓</span><span>Günde en az 3 litre su iç</span></div>
+      <div class="rrow"><span class="rck">✓</span><span>7-8 saat uyu — kaslar uyurken büyür</span></div>
+      <div class="rrow"><span class="rck">✓</span><span>Beyaz ekmeği tam buğday/çavdar ile değiştir</span></div>
+      <div class="rrow"><span class="rck">✓</span><span>Zeytinyağı kullan, ayçiçek yağından kaçın</span></div>
+      <div class="rrow"><span class="rck">✓</span><span>Haftada en az 2 kez balık ye (omega-3)</span></div>
+      <div class="rrow"><span class="rx">✗</span><span>Şeker, hazır gıda, fast food</span></div>
+      <div class="rrow"><span class="rx">✗</span><span>Kola, hazır meyve suyu, gazlı içecek</span></div>
+    </div>
+    <div class="icard">
+      <div class="ictit">🗓️ Program Özeti</div>
+      <div class="prow"><span class="plbl">Pazartesi</span><span class="pval" style="color:#2D6A4F">💪 İtiş</span></div>
+      <div class="prow"><span class="plbl">Salı</span><span class="pval" style="color:#1E4F8C">🏋️ Çekiş</span></div>
+      <div class="prow"><span class="plbl">Çarşamba</span><span class="pval" style="color:#6B7280">😴 Dinlenme</span></div>
+      <div class="prow"><span class="plbl">Perşembe</span><span class="pval" style="color:#2D6A4F">💪 İtiş</span></div>
+      <div class="prow"><span class="plbl">Cuma</span><span class="pval" style="color:#1E4F8C">🏋️ Çekiş</span></div>
+      <div class="prow"><span class="plbl">Cumartesi + Pazar</span><span class="pval" style="color:#6B7280">😴 Dinlenme</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav id="bnav">
+  <button class="nb active" onclick="showScr('workout',this)"><span class="ni">🏋️</span><span class="nl">Antrenman</span><div class="ndot"></div></button>
+  <button class="nb" onclick="showScr('progress',this)"><span class="ni">📊</span><span class="nl">İlerleme</span><div class="ndot"></div></button>
+  <button class="nb" onclick="showScr('meal',this)"><span class="ni">🥗</span><span class="nl">Beslenme</span><div class="ndot"></div></button>
+  <button class="nb" onclick="showScr('info',this)"><span class="ni">📋</span><span class="nl">Bilgiler</span><div class="ndot"></div></button>
+</nav>
+</div>
+
+<div id="toast"></div>
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div id="modal-box">
+    <div class="modal-title"><span id="modal-title-text"></span><button class="modal-close" onclick="closeModalDirect()">✕</button></div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════
+const DAYS=[
+  {full:"Pazartesi",type:"push",tag:"İTİŞ"},
+  {full:"Salı",type:"pull",tag:"ÇEKİŞ"},
+  {full:"Çarşamba",type:"rest",tag:"DİNLENME"},
+  {full:"Perşembe",type:"push",tag:"İTİŞ"},
+  {full:"Cuma",type:"pull",tag:"ÇEKİŞ"},
+  {full:"Cumartesi",type:"rest",tag:"DİNLENME"},
+  {full:"Pazar",type:"rest",tag:"TAM DİNLENME"},
+];
+
+// SVG animations for each exercise (stick figure style)
+const ANIMS={
+  "bench_press":`<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+    <style>.b{fill:none;stroke:#52B788;stroke-width:3;stroke-linecap:round}.bar{fill:none;stroke:#D8F3DC;stroke-width:4;stroke-linecap:round}.plate{fill:#52B788;rx:3}.head{fill:#52B788}</style>
+    <rect x="20" y="85" width="160" height="10" rx="4" fill="#2D6A4F"/>
+    <circle class="head" cx="100" cy="45" r="10"/>
+    <line class="b" x1="100" y1="55" x2="100" y2="80"/>
+    <line class="b" x1="100" y1="80" x2="85" y2="95"/>
+    <line class="b" x1="100" y1="80" x2="115" y2="95"/>
+    <line id="arm-l" class="b" x1="100" y1="62" x2="72" y2="55"/>
+    <line id="arm-r" class="b" x1="100" y1="62" x2="128" y2="55"/>
+    <line id="bar" class="bar" x1="60" y1="55" x2="140" y2="55"/>
+    <rect x="55" y="48" width="8" height="14" rx="2" fill="#52B788"/>
+    <rect x="137" y="48" width="8" height="14" rx="2" fill="#52B788"/>
+    <animate xlink:href="#arm-l" attributeName="y2" values="55;70;55" dur="1.8s" repeatCount="indefinite"/>
+    <animate xlink:href="#arm-r" attributeName="y2" values="55;70;55" dur="1.8s" repeatCount="indefinite"/>
+    <animate xlink:href="#bar" attributeName="y1" values="55;70;55" dur="1.8s" repeatCount="indefinite"/>
+    <animate xlink:href="#bar" attributeName="y2" values="55;70;55" dur="1.8s" repeatCount="indefinite"/>
+    <text x="100" y="130" text-anchor="middle" fill="#D8F3DC" font-size="11" font-weight="bold" font-family="sans-serif">BENCH PRESS</text>
+  </svg>`,
+  "squat":`<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+    <style>.b{fill:none;stroke:#52B788;stroke-width:3;stroke-linecap:round}</style>
+    <line class="b" x1="60" y1="105" x2="140" y2="105"/>
+    <circle cx="100" cy="32" r="10" fill="#52B788"/>
+    <line id="sq-body" class="b" x1="100" y1="42" x2="100" y2="72"/>
+    <line id="sq-ll" class="b" x1="100" y1="72" x2="80" y2="100"/>
+    <line id="sq-rl" class="b" x1="100" y1="72" x2="120" y2="100"/>
+    <line id="sq-lf" class="b" x1="80" y1="100" x2="72" y2="106"/>
+    <line id="sq-rf" class="b" x1="120" y1="100" x2="128" y2="106"/>
+    <line id="sq-la" class="b" x1="100" y1="52" x2="75" y2="60"/>
+    <line id="sq-ra" class="b" x1="100" y1="52" x2="125" y2="60"/>
+    <line id="sq-bar" class="b" x1="65" y1="45" x2="135" y2="45" stroke="#D8F3DC" stroke-width="4"/>
+    <animateTransform xlink:href="#sq-body" attributeName="transform" type="translate" values="0,0;0,20;0,0" dur="2s" repeatCount="indefinite"/>
+    <animateTransform xlink:href="#sq-ll" attributeName="transform" type="translate" values="0,0;0,20;0,0" dur="2s" repeatCount="indefinite"/>
+    <animateTransform xlink:href="#sq-rl" attributeName="transform" type="translate" values="0,0;0,20;0,0" dur="2s" repeatCount="indefinite"/>
+    <animateTransform xlink:href="#sq-la" attributeName="transform" type="translate" values="0,0;0,20;0,0" dur="2s" repeatCount="indefinite"/>
+    <animateTransform xlink:href="#sq-ra" attributeName="transform" type="translate" values="0,0;0,20;0,0" dur="2s" repeatCount="indefinite"/>
+    <animateTransform xlink:href="#sq-bar" attributeName="transform" type="translate" values="0,0;0,20;0,0" dur="2s" repeatCount="indefinite"/>
+    <text x="100" y="130" text-anchor="middle" fill="#D8F3DC" font-size="11" font-weight="bold" font-family="sans-serif">SQUAT</text>
+  </svg>`,
+  "curl":`<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+    <style>.b{fill:none;stroke:#4A90D9;stroke-width:3;stroke-linecap:round}</style>
+    <circle cx="100" cy="30" r="10" fill="#4A90D9"/>
+    <line class="b" x1="100" y1="40" x2="100" y2="80"/>
+    <line class="b" x1="100" y1="80" x2="82" y2="105"/>
+    <line class="b" x1="100" y1="80" x2="118" y2="105"/>
+    <line class="b" x1="82" y1="105" x2="78" y2="112"/>
+    <line class="b" x1="118" y1="105" x2="122" y2="112"/>
+    <line id="cu-la" class="b" x1="100" y1="52" x2="75" y2="62"/>
+    <line id="cu-lb" class="b" x1="75" y1="62" x2="68" y2="80"/>
+    <line id="cu-ra" class="b" x1="100" y1="52" x2="125" y2="62"/>
+    <line id="cu-rb" class="b" x1="125" y1="62" x2="130" y2="80"/>
+    <circle id="cu-ld" cx="68" cy="80" r="5" fill="#4A90D9"/>
+    <circle id="cu-rd" cx="130" cy="80" r="5" fill="#4A90D9"/>
+    <animate xlink:href="#cu-lb" attributeName="y2" values="80;58;80" dur="1.6s" repeatCount="indefinite"/>
+    <animate xlink:href="#cu-rb" attributeName="y2" values="80;58;80" dur="1.6s" repeatCount="indefinite"/>
+    <animate xlink:href="#cu-ld" attributeName="cy" values="80;58;80" dur="1.6s" repeatCount="indefinite"/>
+    <animate xlink:href="#cu-rd" attributeName="cy" values="80;58;80" dur="1.6s" repeatCount="indefinite"/>
+    <text x="100" y="130" text-anchor="middle" fill="#DBEAFE" font-size="11" font-weight="bold" font-family="sans-serif">BİCEPS CURL</text>
+  </svg>`,
+  "pulldown":`<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+    <style>.b{fill:none;stroke:#4A90D9;stroke-width:3;stroke-linecap:round}</style>
+    <line stroke="#D8F3DC" stroke-width="2" x1="100" y1="0" x2="100" y2="20"/>
+    <line id="pd-bar" stroke="#DBEAFE" stroke-width="4" stroke-linecap="round" x1="70" y1="20" x2="130" y2="20"/>
+    <circle cx="100" cy="52" r="10" fill="#4A90D9"/>
+    <line class="b" x1="100" y1="62" x2="100" y2="90"/>
+    <line class="b" x1="100" y1="90" x2="82" y2="112"/>
+    <line class="b" x1="100" y1="90" x2="118" y2="112"/>
+    <line id="pd-la" class="b" x1="100" y1="68" x2="72" y2="40"/>
+    <line id="pd-ra" class="b" x1="100" y1="68" x2="128" y2="40"/>
+    <animate xlink:href="#pd-la" attributeName="y2" values="40;58;40" dur="1.8s" repeatCount="indefinite"/>
+    <animate xlink:href="#pd-ra" attributeName="y2" values="40;58;40" dur="1.8s" repeatCount="indefinite"/>
+    <animate xlink:href="#pd-bar" attributeName="y1" values="20;36;20" dur="1.8s" repeatCount="indefinite"/>
+    <animate xlink:href="#pd-bar" attributeName="y2" values="20;36;20" dur="1.8s" repeatCount="indefinite"/>
+    <text x="100" y="138" text-anchor="middle" fill="#DBEAFE" font-size="11" font-weight="bold" font-family="sans-serif">LAT PULLDOWN</text>
+  </svg>`,
+  "shoulder_press":`<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+    <style>.b{fill:none;stroke:#52B788;stroke-width:3;stroke-linecap:round}</style>
+    <circle cx="100" cy="38" r="10" fill="#52B788"/>
+    <line class="b" x1="100" y1="48" x2="100" y2="85"/>
+    <line class="b" x1="100" y1="85" x2="82" y2="108"/>
+    <line class="b" x1="100" y1="85" x2="118" y2="108"/>
+    <line class="b" x1="82" y1="108" x2="78" y2="118"/>
+    <line class="b" x1="118" y1="108" x2="122" y2="118"/>
+    <line id="sp-la" class="b" x1="100" y1="60" x2="74" y2="58"/>
+    <line id="sp-lb" class="b" x1="74" y1="58" x2="65" y2="40"/>
+    <line id="sp-ra" class="b" x1="100" y1="60" x2="126" y2="58"/>
+    <line id="sp-rb" class="b" x1="126" y1="58" x2="135" y2="40"/>
+    <line id="sp-bar" stroke="#D8F3DC" stroke-width="4" stroke-linecap="round" x1="58" y1="40" x2="142" y2="40"/>
+    <animate xlink:href="#sp-lb" attributeName="y2" values="40;24;40" dur="1.8s" repeatCount="indefinite"/>
+    <animate xlink:href="#sp-rb" attributeName="y2" values="40;24;40" dur="1.8s" repeatCount="indefinite"/>
+    <animate xlink:href="#sp-bar" attributeName="y1" values="40;24;40" dur="1.8s" repeatCount="indefinite"/>
+    <animate xlink:href="#sp-bar" attributeName="y2" values="40;24;40" dur="1.8s" repeatCount="indefinite"/>
+    <text x="100" y="138" text-anchor="middle" fill="#D8F3DC" font-size="11" font-weight="bold" font-family="sans-serif">SHOULDER PRESS</text>
+  </svg>`,
+  "row":`<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+    <style>.b{fill:none;stroke:#4A90D9;stroke-width:3;stroke-linecap:round}</style>
+    <rect x="10" y="100" width="180" height="8" rx="3" fill="#2D6A4F"/>
+    <circle cx="55" cy="62" r="10" fill="#4A90D9"/>
+    <line class="b" x1="55" y1="72" x2="70" y2="98"/>
+    <line class="b" x1="55" y1="72" x2="40" y2="98"/>
+    <line class="b" x1="55" y1="80" x2="35" y2="68"/>
+    <line id="row-a" class="b" x1="55" y1="80" x2="95" y2="72"/>
+    <line id="row-b" class="b" x1="95" y1="72" x2="118" y2="78"/>
+    <circle id="row-w" cx="118" cy="78" r="6" fill="#4A90D9"/>
+    <animate xlink:href="#row-a" attributeName="x2" values="95;75;95" dur="1.6s" repeatCount="indefinite"/>
+    <animate xlink:href="#row-b" attributeName="x1" values="95;75;95" dur="1.6s" repeatCount="indefinite"/>
+    <animate xlink:href="#row-b" attributeName="x2" values="118;88;118" dur="1.6s" repeatCount="indefinite"/>
+    <animate xlink:href="#row-w" attributeName="cx" values="118;88;118" dur="1.6s" repeatCount="indefinite"/>
+    <text x="100" y="130" text-anchor="middle" fill="#DBEAFE" font-size="11" font-weight="bold" font-family="sans-serif">BENT-OVER ROW</text>
+  </svg>`,
+  "lateral_raise":`<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+    <style>.b{fill:none;stroke:#52B788;stroke-width:3;stroke-linecap:round}</style>
+    <circle cx="100" cy="35" r="10" fill="#52B788"/>
+    <line class="b" x1="100" y1="45" x2="100" y2="82"/>
+    <line class="b" x1="100" y1="82" x2="82" y2="108"/>
+    <line class="b" x1="100" y1="82" x2="118" y2="108"/>
+    <line id="lr-la" class="b" x1="100" y1="58" x2="72" y2="65"/>
+    <line id="lr-ra" class="b" x1="100" y1="58" x2="128" y2="65"/>
+    <circle id="lr-ld" cx="72" cy="65" r="5" fill="#52B788"/>
+    <circle id="lr-rd" cx="128" cy="65" r="5" fill="#52B788"/>
+    <animate xlink:href="#lr-la" attributeName="y2" values="65;50;65" dur="1.6s" repeatCount="indefinite"/>
+    <animate xlink:href="#lr-ra" attributeName="y2" values="65;50;65" dur="1.6s" repeatCount="indefinite"/>
+    <animate xlink:href="#lr-ld" attributeName="cy" values="65;50;65" dur="1.6s" repeatCount="indefinite"/>
+    <animate xlink:href="#lr-rd" attributeName="cy" values="65;50;65" dur="1.6s" repeatCount="indefinite"/>
+    <text x="100" y="130" text-anchor="middle" fill="#D8F3DC" font-size="11" font-weight="bold" font-family="sans-serif">LATERAL RAISE</text>
+  </svg>`,
+  "plank":`<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+    <style>.b{fill:none;stroke:#52B788;stroke-width:3;stroke-linecap:round}</style>
+    <rect x="20" y="108" width="160" height="6" rx="3" fill="#2D6A4F"/>
+    <circle cx="148" cy="82" r="9" fill="#52B788"/>
+    <line class="b" x1="148" y1="91" x2="50" y2="104"/>
+    <line class="b" x1="148" y1="91" x2="145" y2="108"/>
+    <line class="b" x1="125" y1="97" x2="120" y2="108"/>
+    <line class="b" x1="148" y1="92" x2="115" y2="86"/>
+    <line class="b" x1="115" y1="86" x2="52" y2="104"/>
+    <circle cx="50" cy="104" r="5" fill="#52B788"/>
+    <text x="100" y="130" text-anchor="middle" fill="#D8F3DC" font-size="11" font-weight="bold" font-family="sans-serif">PLANK</text>
+  </svg>`,
+  "deadlift":`<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+    <style>.b{fill:none;stroke:#4A90D9;stroke-width:3;stroke-linecap:round}</style>
+    <line stroke="#D8F3DC" stroke-width="4" stroke-linecap="round" x1="60" y1="105" x2="140" y2="105"/>
+    <rect x="52" y="96" width="12" height="18" rx="3" fill="#4A90D9"/>
+    <rect x="136" y="96" width="12" height="18" rx="3" fill="#4A90D9"/>
+    <circle id="dl-h" cx="100" cy="42" r="10" fill="#4A90D9"/>
+    <line id="dl-b" class="b" x1="100" y1="52" x2="100" y2="80"/>
+    <line id="dl-ll" class="b" x1="100" y1="80" x2="84" y2="102"/>
+    <line id="dl-rl" class="b" x1="100" y1="80" x2="116" y2="102"/>
+    <line id="dl-la" class="b" x1="100" y1="60" x2="76" y2="76"/>
+    <line id="dl-ra" class="b" x1="100" y1="60" x2="124" y2="76"/>
+    <animate xlink:href="#dl-h" attributeName="cy" values="42;72;42" dur="2s" repeatCount="indefinite"/>
+    <animate xlink:href="#dl-b" attributeName="y1" values="52;82;52" dur="2s" repeatCount="indefinite"/>
+    <animate xlink:href="#dl-b" attributeName="y2" values="80;100;80" dur="2s" repeatCount="indefinite"/>
+    <animate xlink:href="#dl-la" attributeName="y1" values="60;76;60" dur="2s" repeatCount="indefinite"/>
+    <animate xlink:href="#dl-ra" attributeName="y1" values="60;76;60" dur="2s" repeatCount="indefinite"/>
+    <text x="100" y="138" text-anchor="middle" fill="#DBEAFE" font-size="11" font-weight="bold" font-family="sans-serif">ROMANIAN DL</text>
+  </svg>`,
+  "default_push":`<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="100" cy="38" r="10" fill="#52B788"/>
+    <line stroke="#52B788" stroke-width="3" stroke-linecap="round" x1="100" y1="48" x2="100" y2="85"/>
+    <line stroke="#52B788" stroke-width="3" stroke-linecap="round" x1="100" y1="60" x2="76" y2="72"/>
+    <line stroke="#52B788" stroke-width="3" stroke-linecap="round" x1="100" y1="60" x2="124" y2="72"/>
+    <line stroke="#52B788" stroke-width="3" stroke-linecap="round" x1="100" y1="85" x2="84" y2="110"/>
+    <line stroke="#52B788" stroke-width="3" stroke-linecap="round" x1="100" y1="85" x2="116" y2="110"/>
+    <text x="100" y="135" text-anchor="middle" fill="#D8F3DC" font-size="11" font-weight="bold" font-family="sans-serif">EGZERSİZ</text>
+  </svg>`,
+  "default_pull":`<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="100" cy="38" r="10" fill="#4A90D9"/>
+    <line stroke="#4A90D9" stroke-width="3" stroke-linecap="round" x1="100" y1="48" x2="100" y2="85"/>
+    <line stroke="#4A90D9" stroke-width="3" stroke-linecap="round" x1="100" y1="60" x2="76" y2="72"/>
+    <line stroke="#4A90D9" stroke-width="3" stroke-linecap="round" x1="100" y1="60" x2="124" y2="72"/>
+    <line stroke="#4A90D9" stroke-width="3" stroke-linecap="round" x1="100" y1="85" x2="84" y2="110"/>
+    <line stroke="#4A90D9" stroke-width="3" stroke-linecap="round" x1="100" y1="85" x2="116" y2="110"/>
+    <text x="100" y="135" text-anchor="middle" fill="#DBEAFE" font-size="11" font-weight="bold" font-family="sans-serif">EGZERSİZ</text>
+  </svg>`,
+};
+
+const EX={
+  push:[
+    {name:"Bench Press",muscle:"Göğüs",sets:"4 × 10-12",anim:"bench_press",
+     img:"https://images.unsplash.com/photo-1534368786749-b63e05c92717?w=400&q=80",yt:"rT7DgCr-3pg",
+     tip:"Kürek kemiklerini birbirine yaklaştır. Bar göğse değmeli, dirsekler 75° açıda.",
+     muscles:["Göğüs","Triceps","Ön Omuz"],
+     alts:[
+       {name:"Dumbbell Flat Press",diff:"same",note:"Bench press yerine geçer, denge gerektirir"},
+       {name:"Push-Up",diff:"easy",note:"Alet gerekmez, vücut ağırlığı ile"},
+       {name:"Cable Crossover",diff:"same",note:"Kablo makinesi ile göğüs odaklı"},
+     ]},
+    {name:"İnkline Dumbbell Press",muscle:"Üst Göğüs",sets:"3 × 12",anim:"shoulder_press",
+     img:"https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&q=80",yt:"8iPEnn-ltC8",
+     tip:"Banco 30-45° açıda. Dumbbellları kontrollü indir.",
+     muscles:["Üst Göğüs","Omuz","Triceps"],
+     alts:[
+       {name:"İnkline Barbell Press",diff:"hard",note:"Daha fazla ağırlık kaldırabilirsin"},
+       {name:"İnkline Push-Up",diff:"easy",note:"Alet gerekmez, ayaklar yüksekte"},
+       {name:"Low Cable Fly",diff:"same",note:"Kablo ile üst göğüs odaklı"},
+     ]},
+    {name:"Shoulder Press",muscle:"Omuz",sets:"3 × 12",anim:"shoulder_press",
+     img:"https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400&q=80",yt:"qEwKCR5JCog",
+     tip:"Beli dik tut, core'u sık. Kulak hizasından yukarı itin.",
+     muscles:["Ön Omuz","Yan Omuz","Trapez"],
+     alts:[
+       {name:"Barbell Overhead Press",diff:"hard",note:"Daha ağır yük, daha fazla stabilizasyon"},
+       {name:"Arnold Press",diff:"same",note:"Rotasyonlu hareket, tüm omuzu çalıştırır"},
+       {name:"Machine Shoulder Press",diff:"easy",note:"Makine sabit yolu tutar, başlangıç için iyi"},
+     ]},
+    {name:"Lateral Raise",muscle:"Yan Omuz",sets:"3 × 15",anim:"lateral_raise",
+     img:"https://images.unsplash.com/photo-1532029837206-abbe2b7620e3?w=400&q=80",yt:"3VcKaXpzqRo",
+     tip:"Ağırlık hafif olsun. Omuz hizasına kadar kaldır.",
+     muscles:["Yan Omuz"],
+     alts:[
+       {name:"Cable Lateral Raise",diff:"same",note:"Kablo sürekli gerilim sağlar"},
+       {name:"Machine Lateral Raise",diff:"easy",note:"Makine ile form daha kolay korunur"},
+     ]},
+    {name:"Triceps Pushdown",muscle:"Triceps",sets:"3 × 15",anim:"default_push",
+     img:"https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=80",yt:"2-LAMcpzODU",
+     tip:"Dirsekler sabit ve vücuda yakın. Sadece ön kol hareket eder.",
+     muscles:["Triceps"],
+     alts:[
+       {name:"Overhead Triceps Extension",diff:"same",note:"Uzun baş bölümünü daha iyi çalıştırır"},
+       {name:"Skull Crusher",diff:"hard",note:"Barbell ile yoğun triceps çalışması"},
+       {name:"Diamond Push-Up",diff:"easy",note:"Alet gerekmez, dar tutuş push-up"},
+     ]},
+    {name:"Dips",muscle:"Göğüs / Triceps",sets:"3 × 10",anim:"default_push",
+     img:"https://images.unsplash.com/photo-1598971639058-fab3c3109a78?w=400&q=80",yt:"2z8JmcrW-As",
+     tip:"Göğüs için öne eğil, triceps için dik dur.",
+     muscles:["Alt Göğüs","Triceps","Ön Omuz"],
+     alts:[
+       {name:"Bench Dip",diff:"easy",note:"Paralel bar yerine sehpa ile yapılır"},
+       {name:"Machine Dip",diff:"easy",note:"Ağırlık destekli makine versiyonu"},
+       {name:"Close-Grip Bench Press",diff:"same",note:"Bar ile dar tutuş bench press"},
+     ]},
+    {name:"Plank",muscle:"Karın / Core",sets:"3 × 45 sn",anim:"plank",
+     img:"https://images.unsplash.com/photo-1566241142559-40e1dab266c6?w=400&q=80",yt:"ASdvN_XEl_c",
+     tip:"Kalçayı ne yükselt ne düşür. Boyun nötr.",
+     muscles:["Karın","Kalça","Sırt"],
+     alts:[
+       {name:"Dead Bug",diff:"same",note:"Sırt üstü core egzersizi"},
+       {name:"Ab Wheel",diff:"hard",note:"Tekerlek ile daha zor core hareketi"},
+     ]},
+    {name:"Crunch",muscle:"Karın",sets:"3 × 20",anim:"default_push",
+     img:"https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&q=80",yt:"Xyd_fa5zoEU",
+     tip:"Elleri başın arkasında kilitleme. Karın kasıyla kalk.",
+     muscles:["Üst Karın"],
+     alts:[
+       {name:"Cable Crunch",diff:"hard",note:"Ağırlıklı versiyon, daha yoğun"},
+       {name:"Leg Raise",diff:"same",note:"Alt karın odaklı alternatif"},
+     ]},
+  ],
+  pull:[
+    {name:"Lat Pulldown",muscle:"Sırt",sets:"4 × 10-12",anim:"pulldown",
+     img:"https://images.unsplash.com/photo-1531177071211-ed1b7991958b?w=400&q=80",yt:"CAwf7n6Luuc",
+     tip:"Bar çeneye kadar çekilmeli. Dirsekleri aşağı-arkaya çek.",
+     muscles:["Latissimus","Biceps","Arka Omuz"],
+     alts:[
+       {name:"Pull-Up (Barfiks)",diff:"hard",note:"Vücut ağırlığıyla en etkili sırt hareketi"},
+       {name:"Assisted Pull-Up",diff:"easy",note:"Makine destekli barfiks"},
+       {name:"Straight-Arm Pulldown",diff:"same",note:"Kablo ile lat odaklı"},
+     ]},
+    {name:"Seated Cable Row",muscle:"Orta Sırt",sets:"3 × 12",anim:"row",
+     img:"https://images.unsplash.com/photo-1583454155184-870a1f63aebc?w=400&q=80",yt:"GZbfZ033f74",
+     tip:"Sırt dik, kolu karına çekerken kürek kemiklerini sık.",
+     muscles:["Orta Sırt","Biceps","Trapez"],
+     alts:[
+       {name:"T-Bar Row",diff:"hard",note:"Daha ağır yük kaldırabilirsin"},
+       {name:"Dumbbell Row",diff:"same",note:"Tek kol sırt hareketi, denge gerektirir"},
+       {name:"Resistance Band Row",diff:"easy",note:"Lastik bant ile alet gerekmez"},
+     ]},
+    {name:"Bent-Over Row",muscle:"Sırt",sets:"3 × 10",anim:"row",
+     img:"https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&q=80",yt:"FWJR5Ve8bnQ",
+     tip:"Bel düz, gövde 45° eğik. Bar göbeğe doğru çekil.",
+     muscles:["Lat","Orta Sırt","Biceps"],
+     alts:[
+       {name:"Dumbbell Bent-Over Row",diff:"easy",note:"Her iki kol ayrı çalışır"},
+       {name:"Pendlay Row",diff:"hard",note:"Zemin sıfırlama, daha patlayıcı"},
+     ]},
+    {name:"Barbell Curl",muscle:"Biceps",sets:"3 × 12",anim:"curl",
+     img:"https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&q=80",yt:"kwG2ipFRgfo",
+     tip:"Dirsekler sabit. Tepe noktada 1 sn sık.",
+     muscles:["Biceps"],
+     alts:[
+       {name:"EZ-Bar Curl",diff:"same",note:"Bilek üzerindeki baskı daha az"},
+       {name:"Incline Dumbbell Curl",diff:"same",note:"Uzun başı daha iyi izole eder"},
+       {name:"Cable Curl",diff:"same",note:"Sürekli gerilim sağlar"},
+     ]},
+    {name:"Hammer Curl",muscle:"Biceps / Ön Kol",sets:"3 × 12",anim:"curl",
+     img:"https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400&q=80",yt:"zC3nLlEvin4",
+     tip:"Başparmak yukarı bakmalı. Ön kol kasını da çalıştırır.",
+     muscles:["Biceps","Brachialis","Ön Kol"],
+     alts:[
+       {name:"Rope Hammer Curl",diff:"same",note:"Kablo ile daha geniş hareket açısı"},
+       {name:"Reverse Curl",diff:"same",note:"Ön kol odaklı ters tutuş"},
+     ]},
+    {name:"Squat",muscle:"Bacak",sets:"4 × 10",anim:"squat",
+     img:"https://images.unsplash.com/photo-1566241142559-40e1dab266c6?w=400&q=80",yt:"ultWZbUMPL8",
+     tip:"Ayaklar omuz genişliğinde. Diz, ayak parmakları hizasını geçmesin.",
+     muscles:["Quadriceps","Kalça","Hamstring"],
+     alts:[
+       {name:"Goblet Squat",diff:"easy",note:"Dumbbell ile daha kolay form"},
+       {name:"Leg Press",diff:"easy",note:"Makine ile daha güvenli ağırlık"},
+       {name:"Bulgarian Split Squat",diff:"hard",note:"Tek bacak, daha zor ama etkili"},
+     ]},
+    {name:"Romanian Deadlift",muscle:"Arka Bacak",sets:"3 × 12",anim:"deadlift",
+     img:"https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&q=80",yt:"JCXUYuzwNrM",
+     tip:"Dizler hafif bükük, bel düz. Hamstringleri gererek in.",
+     muscles:["Hamstring","Kalça","Alt Sırt"],
+     alts:[
+       {name:"Leg Curl",diff:"easy",note:"Makine ile hamstring izolasyonu"},
+       {name:"Good Morning",diff:"hard",note:"Barbell omuzda, daha fazla sırt aktivasyonu"},
+     ]},
+    {name:"Calf Raise",muscle:"Baldır",sets:"3 × 20",anim:"default_pull",
+     img:"https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=80",yt:"gwLzBJYoWlA",
+     tip:"Tepe noktada 2 sn bekle. Kontrollü in.",
+     muscles:["Gastrocnemius","Soleus"],
+     alts:[
+       {name:"Seated Calf Raise",diff:"same",note:"Oturarak, soleus kasını daha iyi çalıştırır"},
+       {name:"Donkey Calf Raise",diff:"hard",note:"En etkili baldır hareketi"},
+     ]},
+  ],
+};
+
+const CARDIO={
+  push:{label:"Koşu Bandı",detail:"%3 eğim · 5.5 km/s · 15 dk",icon:"🏃"},
+  pull:{label:"Eliptik / Stairmaster",detail:"Orta tempo · 15 dk",icon:"🚴"},
+};
+
+const ALARMS=[
+  {id:"breakfast",icon:"🌅",name:"Kahvaltı",time:"07:30",on:false},
+  {id:"lunch",icon:"☀️",name:"Öğle Yemeği",time:"12:30",on:false},
+  {id:"snack",icon:"🍎",name:"Ara Öğün",time:"17:30",on:false},
+  {id:"dinner",icon:"🌙",name:"Akşam Yemeği",time:"20:30",on:false},
+  {id:"night",icon:"🫐",name:"Gece Atıştırması",time:"22:00",on:false},
+];
+
+const MEALS=[
+  {meals:[{icon:"🌅",bg:"#FFF0E6",label:"Kahvaltı",kcal:"~520 kcal",food:"3 haşlanmış yumurta · Tam buğday ekmeği (2 dilim) · Beyaz peynir (60g) · Domates · Salatalık · Ceviz"},{icon:"☀️",bg:"#EFF6FF",label:"Öğle Yemeği",kcal:"~650 kcal",food:"Izgara tavuk göğsü (180g) · Bulgur pilavı · Mevsim salatası · Ayran"},{icon:"🍎",bg:"#F0FFF4",label:"Ara Öğün",kcal:"~180 kcal",food:"1 muz + 10 badem"},{icon:"🌙",bg:"#F5F3FF",label:"Akşam Yemeği",kcal:"~600 kcal",food:"Fırın somon (180g) · Brokoli + havuç · Süzme yoğurt + donmuş orman meyveleri + tarçın"}]},
+  {meals:[{icon:"🌅",bg:"#FFF0E6",label:"Kahvaltı",kcal:"~490 kcal",food:"Sebzeli omlet (3 yumurta) · Çavdar ekmeği (2 dilim) · Zeytin (5-6 adet)"},{icon:"☀️",bg:"#EFF6FF",label:"Öğle Yemeği",kcal:"~620 kcal",food:"Mercimek çorbası · Izgara köfte (150g) · Esmer pirinç · Salata"},{icon:"🍎",bg:"#F0FFF4",label:"Ara Öğün",kcal:"~160 kcal",food:"2 hurma + 1 avuç fındık"},{icon:"🌙",bg:"#F5F3FF",label:"Akşam Yemeği",kcal:"~580 kcal",food:"Tavuk sote (180g) · Tam buğday makarna · Yoğurt + orman meyveleri"}]},
+  {meals:[{icon:"🌅",bg:"#FFF0E6",label:"Kahvaltı",kcal:"~420 kcal",food:"Kaşarlı menemen (2 yumurta) · Tam buğday ekmeği · Domates · Salatalık"},{icon:"☀️",bg:"#EFF6FF",label:"Öğle Yemeği",kcal:"~550 kcal",food:"Kuru fasulye (1 porsiyon) · Bulgur pilavı · Cacık"},{icon:"🍎",bg:"#F0FFF4",label:"Ara Öğün",kcal:"~150 kcal",food:"1 elma + 10 ceviz"},{icon:"🌙",bg:"#F5F3FF",label:"Akşam Yemeği",kcal:"~530 kcal",food:"Fırın tavuk but (derisiz, 180g) · Fırın sebze · Yoğurt + orman meyveleri"}]},
+  {meals:[{icon:"🌅",bg:"#FFF0E6",label:"Kahvaltı",kcal:"~510 kcal",food:"3 yumurta sahanda (zeytinyağlı) · Beyaz peynir · Tam buğday ekmeği · Badem"},{icon:"☀️",bg:"#EFF6FF",label:"Öğle Yemeği",kcal:"~610 kcal",food:"Izgara levrek/çipura (200g) · Haşlanmış patates · Yeşil salata"},{icon:"🍎",bg:"#F0FFF4",label:"Ara Öğün",kcal:"~170 kcal",food:"1 muz + 2 hurma"},{icon:"🌙",bg:"#F5F3FF",label:"Akşam Yemeği",kcal:"~570 kcal",food:"Hindi göğsü ızgara (180g) · Mercimek salatası · Yoğurt + orman meyveleri"}]},
+  {meals:[{icon:"🌅",bg:"#FFF0E6",label:"Kahvaltı",kcal:"~480 kcal",food:"Yulaf ezmesi (5 kaşık, sütle) + muz + tarçın + bal"},{icon:"☀️",bg:"#EFF6FF",label:"Öğle Yemeği",kcal:"~630 kcal",food:"Tavuk şiş (180g) · Bulgur pilavı · Cacık · Söğüş salata"},{icon:"🍎",bg:"#F0FFF4",label:"Ara Öğün",kcal:"~190 kcal",food:"Karışık kuruyemiş (badem, ceviz, fındık)"},{icon:"🌙",bg:"#F5F3FF",label:"Akşam Yemeği",kcal:"~590 kcal",food:"Kıymalı biber dolması (150g) · Yoğurt + orman meyveleri + tarçın"}]},
+  {meals:[{icon:"🌅",bg:"#FFF0E6",label:"Kahvaltı",kcal:"~500 kcal",food:"Serpme kahvaltı: 2 yumurta · Peynir · Zeytin · Domates · Salatalık · Ceviz"},{icon:"☀️",bg:"#EFF6FF",label:"Öğle Yemeği",kcal:"~540 kcal",food:"Ev yapımı mercimek köftesi · Ayran · Salata"},{icon:"🍎",bg:"#F0FFF4",label:"Ara Öğün",kcal:"~150 kcal",food:"1 armut + 10 badem"},{icon:"🌙",bg:"#F5F3FF",label:"Akşam Yemeği",kcal:"~610 kcal",food:"Izgara dana biftek (150g, helal) · Fırın sebze · Yoğurt + orman meyveleri"}]},
+  {meals:[{icon:"🌅",bg:"#FFF0E6",label:"Kahvaltı",kcal:"~460 kcal",food:"Tam buğday ekmek + avokado + 2 haşlanmış yumurta + domates"},{icon:"☀️",bg:"#EFF6FF",label:"Öğle Yemeği",kcal:"~520 kcal",food:"Tavuk çorbası (ev yapımı, şehriyeli) · 1 dilim ekmek · Salata"},{icon:"🍎",bg:"#F0FFF4",label:"Ara Öğün",kcal:"~160 kcal",food:"2 hurma + 1 avuç fındık"},{icon:"🌙",bg:"#F5F3FF",label:"Akşam Yemeği",kcal:"~580 kcal",food:"Fırın uskumru/hamsi (200g) · Haşlanmış yeşil fasulye · Bulgur · Yoğurt + orman meyveleri"}]},
+];
+
+// ═══════════════════════════════════════════════════════════
+// STATE & STORAGE
+// ═══════════════════════════════════════════════════════════
+let curDay=0,curMeal=0;
+let alarmTimers={};
+let timerInterval=null,timerSecs=60,timerRunning=false;
+
+function load(k,def){try{const v=localStorage.getItem('fp_'+k);return v?JSON.parse(v):def;}catch(e){return def;}}
+function save(k,v){try{localStorage.setItem('fp_'+k,JSON.stringify(v));}catch(e){}}
+
+let weightLog=load('wlog',[]);
+let measurements=load('meas',{});
+let workoutDone=load('wdone',{});
+let setLogs=load('slogs',{});
+let pb=load('pb',{});
+
+// Load alarm state
+try{const ad=load('alarms',[]);ad.forEach(a=>{const f=ALARMS.find(x=>x.id===a.id);if(f){f.time=a.time;f.on=a.on;}});}catch(e){}
+
+// ═══════════════════════════════════════════════════════════
+// TOAST & MODAL
+// ═══════════════════════════════════════════════════════════
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+function openModal(title,body){
+  document.getElementById('modal-title-text').textContent=title;
+  document.getElementById('modal-body').innerHTML=body;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function closeModal(e){if(e.target===document.getElementById('modal-overlay'))closeModalDirect();}
+function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('show');}
+
+// ═══════════════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════════════
+function showScr(name,btn){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('scr-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════
+// WORKOUT
+// ═══════════════════════════════════════════════════════════
+function selDay(i){
+  curDay=i;
+  const day=DAYS[i];
+  const tabs=document.querySelectorAll('.dtab');
+  tabs.forEach((t,j)=>{t.className='dtab';if(j===i)t.classList.add(day.type==='push'?'ap':day.type==='pull'?'ac':'ar');});
+  const grad={push:'linear-gradient(135deg,#1B4332,#2D6A4F)',pull:'linear-gradient(135deg,#1A3A5C,#1E4F8C)',rest:'linear-gradient(135deg,#374151,#6B7280)'};
+  document.getElementById('whdr').style.background=grad[day.type];
+  document.getElementById('hday').textContent=day.full;
+  const tagEl=document.getElementById('htag');
+  tagEl.textContent=day.tag;
+  const ts={push:'background:#52B788;color:#1B4332',pull:'background:#4A90D9;color:#fff',rest:'background:#9CA3AF;color:#fff'};
+  tagEl.style.cssText=ts[day.type];
+  renderDay(i);
+  stopTimer();
+}
+
+function renderDay(i){
+  const day=DAYS[i];
+  const el=document.getElementById('dcontent');
+  if(day.type==='rest'){
+    el.innerHTML=`<div class="restsc"><div class="reme">😴</div><div class="retit">Dinlenme Günü</div>
+    <div class="resub">Kaslar uyurken büyür. Bugün vücudunu dinlendir.</div>
+    <div class="rebox"><div class="rebox-t">Önerilen</div>
+    <div class="rebox-s">🚶 20-30 dk hafif yürüyüş<br>🧘 10 dk esneme</div></div></div>`;
+    return;
+  }
+  const exs=EX[day.type],cardio=CARDIO[day.type];
+  const ip=day.type==='push';
+  const pale=ip?'#D8F3DC':'#DBEAFE',dark=ip?'#1B4332':'#1A3A5C';
+  const cgrad=ip?'linear-gradient(135deg,#1B4332,#2D6A4F)':'linear-gradient(135deg,#1A3A5C,#1E4F8C)';
+  const dateKey=todayKey();
+  const doneSet=workoutDone[dateKey]||[];
+
+  const statsH=`<div class="sbar">
+    <div class="sc" style="background:${pale}"><div class="sv" style="color:${dark}">${exs.length}</div><div class="sl">Hareket</div></div>
+    <div class="sc" style="background:${pale}"><div class="sv" style="color:${dark}">~45dk</div><div class="sl">Ağırlık</div></div>
+    <div class="sc" style="background:${pale}"><div class="sv" style="color:${dark}">15dk</div><div class="sl">Kardiyo</div></div>
+    <div class="sc" style="background:${pale}"><div class="sv" style="color:${dark}">~1sa</div><div class="sl">Toplam</div></div>
+  </div>`;
+
+  // Timer
+  const timerH=`<div style="padding:0 10px 6px">
+    <div class="rest-timer-bar">
+      <div style="font-size:12px;font-weight:700;color:var(--soft)">⏱️ Set Arası<br>Dinlenme</div>
+      <div class="timer-display" id="timer-disp">1:00</div>
+      <div class="timer-btns">
+        <button class="tbtn tbtn-sec" onclick="setTimer(60)">60s</button>
+        <button class="tbtn tbtn-sec" onclick="setTimer(90)">90s</button>
+        <button class="tbtn tbtn-start" id="timer-btn" onclick="toggleTimer()">▶ Başlat</button>
+      </div>
+    </div>
+  </div>`;
+
+  const exH=exs.map((ex,idx)=>{
+    const isDone=doneSet.includes(idx);
+    const logKey=`${day.type}_${idx}`;
+    const logs=setLogs[logKey]||[];
+    const setCount=parseInt(ex.sets.split('×')[0].trim())||3;
+    const animSvg=ANIMS[ex.anim]||ANIMS['default_'+day.type];
+
+    const setsHtml=Array.from({length:setCount},(_,si)=>{
+      const log=logs[si]||{w:'',r:'',done:false};
+      return `<div class="set-row">
+        <div class="set-num">Set ${si+1}</div>
+        <input class="weight-input" type="number" placeholder="kg" value="${log.w}"
+          onchange="logSet('${logKey}',${si},'w',this.value)" onclick="event.stopPropagation()"/>
+        <input class="rep-input" type="number" placeholder="tekrar" value="${log.r}"
+          onchange="logSet('${logKey}',${si},'r',this.value)" onclick="event.stopPropagation()"/>
+        <button class="set-done-btn ${log.done?'done':''}" id="sdb-${logKey}-${si}"
+          onclick="toggleSetDone('${logKey}',${si},event)">${log.done?'✓':'○'}</button>
+      </div>`;
+    }).join('');
+
+    const altsHtml=ex.alts.map(a=>`
+      <div class="alt-item">
+        <div class="alt-icon">🔄</div>
+        <div class="alt-name">${a.name}</div>
+        <div class="alt-diff ${a.diff==='easy'?'diff-easy':a.diff==='hard'?'diff-hard':'diff-same'}">${a.diff==='easy'?'Daha Kolay':a.diff==='hard'?'Daha Zor':'Benzer'}</div>
+      </div>
+      <div style="font-size:10px;color:var(--soft);padding:2px 32px 4px">${a.note}</div>`).join('');
+
+    return `<div class="exc ${isDone?'done-ex':''}" id="ex${idx}">
+      <div class="exh" onclick="togEx(${idx},'${day.type}')">
+        <div class="thumb">
+          <img src="${ex.img}" alt="${ex.name}" loading="lazy"/>
+          <div class="play-badge">▶</div>
+        </div>
+        <div class="exinfo"><div class="exn">${ex.name}</div><div class="exm">${ex.muscle}</div></div>
+        <div class="ex-right">
+          <div class="exsets">${ex.sets}</div>
+          <div class="done-badge">✓ Tamam</div>
+          <button onclick="event.stopPropagation();openExDetail('${ex.name}','${day.type}')" style="font-size:9px;background:#7C3AED;color:#fff;border:none;border-radius:6px;padding:2px 7px;cursor:pointer;font-weight:700;margin-top:2px">🫁 Detay</button>
+        </div>
+        <div class="exch">▼</div>
+      </div>
+      <div class="exdet">
+        <div class="exdiv"></div>
+        <!-- Media tabs -->
+        <div class="media-tabs">
+          <button class="mtab-btn active" id="mtab-anim-${idx}" onclick="switchMedia(${idx},'anim',event)">🎬 Animasyon</button>
+          <button class="mtab-btn" id="mtab-vid-${idx}" onclick="switchMedia(${idx},'vid',event)">▶ YouTube</button>
+        </div>
+        <!-- Anim panel -->
+        <div class="media-panel active" id="mpanel-anim-${idx}">
+          <div class="anim-container">${animSvg}</div>
+        </div>
+        <!-- Video panel -->
+        <div class="media-panel" id="mpanel-vid-${idx}">
+          <div class="vid-placeholder" id="vph${idx}" onclick="loadVid(${idx},'${ex.yt}',event)">
+            <div class="vid-play-btn"></div>
+            <div class="vid-title">${ex.name} — Nasıl Yapılır?</div>
+            <div class="vid-sub">Oynatmak için dokun</div>
+          </div>
+          <div id="vframe${idx}" style="display:none"></div>
+        </div>
+        <div class="tip-box"><strong>💡 Form:</strong> ${ex.tip}</div>
+        <div class="mtags">${ex.muscles.map(m=>`<span class="mtag">${m}</span>`).join('')}</div>
+        <!-- Set tracker -->
+        <div class="set-tracker">
+          <div class="set-tracker-title">
+            <span>📋 Set Takibi</span>
+            <button style="font-size:10px;background:var(--gd);color:#fff;border:none;border-radius:8px;padding:3px 8px;cursor:pointer" onclick="markExDone(${idx},'${day.type}',event)">${isDone?'✓ Tamamlandı':'Tamamla ✓'}</button>
+          </div>
+          <div class="set-rows">${setsHtml}</div>
+        </div>
+        <!-- Alternatives -->
+        <div class="alt-section">
+          <div class="alt-title">🔄 Alternatif Hareketler</div>
+          <div class="alt-list">${altsHtml}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML=`${statsH}${timerH}
+    <div class="slabel">Hareketler — 🫁 Detay butonu: Kas haritası + Fazlar + Sesli</div>
+    <div class="exlist">${exH}</div>
+    <div class="cblock" style="background:${cgrad}">
+      <div class="cion">${cardio.icon}</div>
+      <div><div class="ctit">Kardiyo: ${cardio.label}</div><div class="csub">${cardio.detail}</div></div>
+    </div>`;
+}
+
+function switchMedia(idx,tab,e){
+  e.stopPropagation();
+  ['anim','vid'].forEach(t=>{
+    document.getElementById(`mtab-${t}-${idx}`).classList.toggle('active',t===tab);
+    document.getElementById(`mpanel-${t}-${idx}`).classList.toggle('active',t===tab);
+  });
+}
+
+function togEx(idx,type){
+  const c=document.getElementById('ex'+idx);
+  const wasOpen=c.classList.contains('open');
+  document.querySelectorAll('.exc').forEach(x=>x.classList.remove('open','pull'));
+  document.querySelectorAll('[id^="vframe"]').forEach(f=>{f.innerHTML='';f.style.display='none';});
+  document.querySelectorAll('[id^="vph"]').forEach(p=>p.style.display='flex');
+  if(!wasOpen){c.classList.add('open');if(type==='pull')c.classList.add('pull');c.scrollIntoView({behavior:'smooth',block:'nearest'});}
+}
+
+function loadVid(idx,ytId,e){
+  e.stopPropagation();
+  document.getElementById('vph'+idx).style.display='none';
+  const f=document.getElementById('vframe'+idx);
+  f.style.display='block';
+  f.innerHTML=`<div class="vid-wrap"><iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&playsinline=1" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+}
+
+function logSet(key,si,field,val){
+  if(!setLogs[key])setLogs[key]=[];
+  if(!setLogs[key][si])setLogs[key][si]={w:'',r:'',done:false};
+  setLogs[key][si][field]=val;
+  save('slogs',setLogs);
+  // Check PB
+  if(field==='w'&&val){
+    const exName=key.split('_').slice(1).join('_');
+    if(!pb[exName]||parseFloat(val)>parseFloat(pb[exName].w)){
+      pb[exName]={w:val,date:todayStr()};
+      save('pb',pb);
+      renderPBTable();
+    }
+  }
+}
+
+function toggleSetDone(key,si,e){
+  e.stopPropagation();
+  if(!setLogs[key])setLogs[key]=[];
+  if(!setLogs[key][si])setLogs[key][si]={w:'',r:'',done:false};
+  setLogs[key][si].done=!setLogs[key][si].done;
+  save('slogs',setLogs);
+  const btn=document.getElementById(`sdb-${key}-${si}`);
+  if(btn){btn.classList.toggle('done',setLogs[key][si].done);btn.textContent=setLogs[key][si].done?'✓':'○';}
+  if(setLogs[key][si].done){stopTimer();startTimer();}
+}
+
+function markExDone(idx,type,e){
+  e.stopPropagation();
+  const dateKey=todayKey();
+  if(!workoutDone[dateKey])workoutDone[dateKey]=[];
+  const arr=workoutDone[dateKey];
+  const i=arr.indexOf(idx);
+  if(i===-1){arr.push(idx);toast('✅ Hareket tamamlandı!');}
+  else{arr.splice(i,1);}
+  save('wdone',workoutDone);
+  const card=document.getElementById('ex'+idx);
+  if(card)card.classList.toggle('done-ex',arr.includes(idx));
+  updateStreak();
+}
+
+// ═══ TIMER ═══
+function setTimer(s){timerSecs=s;stopTimer();updateTimerDisp();}
+function updateTimerDisp(){
+  const d=document.getElementById('timer-disp');
+  if(!d)return;
+  const m=Math.floor(timerSecs/60),s=timerSecs%60;
+  d.textContent=`${m}:${s.toString().padStart(2,'0')}`;
+  d.className='timer-display'+(timerSecs<=10?' urgent':'');
+}
+function startTimer(){
+  timerRunning=true;
+  const btn=document.getElementById('timer-btn');
+  if(btn){btn.textContent='⏹ Durdur';btn.className='tbtn tbtn-stop';}
+  timerInterval=setInterval(()=>{
+    timerSecs--;
+    updateTimerDisp();
+    if(timerSecs<=0){
+      stopTimer();
+      timerSecs=60;
+      updateTimerDisp();
+      toast('🔔 Dinlenme bitti! Sonraki set!');
+      try{const ctx=new AudioContext();const o=ctx.createOscillator();const g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=880;g.gain.setValueAtTime(0.3,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);o.start();o.stop(ctx.currentTime+0.5);}catch(e){}
+    }
+  },1000);
+}
+function stopTimer(){
+  clearInterval(timerInterval);timerRunning=false;
+  const btn=document.getElementById('timer-btn');
+  if(btn){btn.textContent='▶ Başlat';btn.className='tbtn tbtn-start';}
+}
+function toggleTimer(){
+  if(timerRunning){stopTimer();timerSecs=60;updateTimerDisp();}
+  else{startTimer();}
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROGRESS
+// ═══════════════════════════════════════════════════════════
+function todayKey(){const d=new Date();return`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;}
+function todayStr(){const d=new Date();return`${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`;}
+function weekKey(offset){const d=new Date();d.setDate(d.getDate()+offset);return`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;}
+function shortDate(offset){const d=new Date();d.setDate(d.getDate()+offset);const days=['Paz','Pzt','Sal','Çar','Per','Cum','Cts'];return days[d.getDay()];}
+
+function updateStreak(){
+  const row=document.getElementById('streak-row');
+  if(!row)return;
+  // Show last 7 days
+  let weekDone=0,total=Object.values(workoutDone).filter(v=>v.length>0).length;
+  let html='';
+  for(let i=-6;i<=0;i++){
+    const k=weekKey(i);
+    const d=DAYS[new Date(new Date().setDate(new Date().getDate()+i)).getDay()%7];
+    const isDone=(workoutDone[k]||[]).length>0;
+    const isRest=d&&d.type==='rest';
+    const isToday=i===0;
+    if(isDone)weekDone++;
+    html+=`<div class="streak-day ${isDone?'done':''} ${isRest?'rest-day':''} ${isToday?'today':''}" title="${shortDate(i)}">${shortDate(i)}</div>`;
+  }
+  row.innerHTML=html;
+  // Best streak
+  let best=0,cur=0;
+  const sortedKeys=Object.keys(workoutDone).sort();
+  sortedKeys.forEach(k=>{if((workoutDone[k]||[]).length>0){cur++;best=Math.max(best,cur);}else{cur=0;}});
+  document.getElementById('streak-count').textContent=weekDone;
+  document.getElementById('total-workouts').textContent=total;
+  document.getElementById('streak-best').textContent=best;
+}
+
+function addWeight(){
+  const v=document.getElementById('weight-input').value;
+  if(!v)return;
+  weightLog.unshift({date:todayStr(),w:parseFloat(v)});
+  if(weightLog.length>20)weightLog=weightLog.slice(0,20);
+  save('wlog',weightLog);
+  document.getElementById('weight-input').value='';
+  renderWeightChart();
+  renderWeightTable();
+  toast(`⚖️ ${v} kg kaydedildi`);
+}
+
+function renderWeightChart(){
+  const svg=document.getElementById('weight-chart');
+  if(!svg||weightLog.length<2)return;
+  const data=[...weightLog].reverse().slice(-10);
+  const vals=data.map(d=>d.w);
+  const mn=Math.min(...vals)-1,mx=Math.max(...vals)+1;
+  const W=300,H=80,pad=10;
+  const pts=vals.map((v,i)=>{
+    const x=pad+(i/(data.length-1))*(W-2*pad);
+    const y=H-pad-((v-mn)/(mx-mn))*(H-2*pad);
+    return[x,y];
+  });
+  const path='M'+pts.map(p=>p.join(',')).join('L');
+  const area='M'+pts[0][0]+','+H+'L'+pts.map(p=>p.join(',')).join('L')+'L'+pts[pts.length-1][0]+','+H+'Z';
+  svg.innerHTML=`
+    <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4A90D9" stop-opacity=".3"/><stop offset="100%" stop-color="#4A90D9" stop-opacity="0"/></linearGradient></defs>
+    <path d="${area}" fill="url(#wg)"/>
+    <path d="${path}" fill="none" stroke="#4A90D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="#4A90D9"/><text x="${p[0]}" y="${p[1]-6}" text-anchor="middle" font-size="8" fill="#6B7280">${vals[i]}</text>`).join('')}`;
+}
+
+function renderWeightTable(){
+  const t=document.getElementById('wlog-table');
+  if(!t)return;
+  t.innerHTML='<tr><th>Tarih</th><th>Kilo</th><th>Fark</th></tr>';
+  weightLog.slice(0,8).forEach((e,i)=>{
+    const prev=weightLog[i+1];
+    const diff=prev?((e.w-prev.w)>0?`<span class="wlog-diff-up">▲${Math.abs(e.w-prev.w).toFixed(1)}</span>`:`<span class="wlog-diff-down">▼${Math.abs(e.w-prev.w).toFixed(1)}</span>`):'—';
+    t.innerHTML+=`<tr><td>${e.date}</td><td class="pval">${e.w} kg</td><td>${diff}</td></tr>`;
+  });
+}
+
+function saveMeasurements(){
+  const ids=['neck','chest','waist','hip','arm-l','arm-r','leg-l','leg-r'];
+  const entry={date:todayStr()};
+  ids.forEach(id=>{const v=document.getElementById('m-'+id).value;if(v)entry[id]=v;});
+  measurements=entry;
+  save('meas',measurements);
+  toast('📏 Ölçüler kaydedildi!');
+}
+
+function loadMeasurements(){
+  const ids=['neck','chest','waist','hip','arm-l','arm-r','leg-l','leg-r'];
+  ids.forEach(id=>{const el=document.getElementById('m-'+id);if(el&&measurements[id])el.value=measurements[id];});
+}
+
+function renderPBTable(){
+  const t=document.getElementById('pb-table');
+  if(!t)return;
+  const entries=Object.entries(pb);
+  if(!entries.length){t.innerHTML='<tr><th>Hareket</th><th>Ağırlık</th><th>Tarih</th></tr><tr><td colspan="3" style="text-align:center;color:var(--soft);padding:12px">Henüz kayıt yok</td></tr>';return;}
+  t.innerHTML='<tr><th>Hareket</th><th>Ağırlık</th><th>Tarih</th></tr>';
+  // Map index to name
+  const allEx=[...EX.push,...EX.pull];
+  entries.forEach(([k,v])=>{
+    const idx=parseInt(k);
+    const exName=!isNaN(idx)?allEx[idx]?.name:k;
+    t.innerHTML+=`<tr><td>${exName||k}</td><td class="pb-val">${v.w} kg <span class="pb-badge">🏆 PB</span></td><td style="color:var(--soft)">${v.date}</td></tr>`;
+  });
+}
+
+// ═══ ALARMS ═══
+function saveAlarmState(){save('alarms',ALARMS.map(a=>({id:a.id,time:a.time,on:a.on})));}
+async function requestNotifPerm(){
+  if(!('Notification' in window)){toast('❌ Bu tarayıcı bildirim desteklemiyor');return;}
+  const p=await Notification.requestPermission();
+  toast(p==='granted'?'✅ Bildirim izni verildi!':'⚠️ Bildirim izni reddedildi');
+}
+function renderAlarms(){
+  const g=document.getElementById('alarm-grid');
+  if(!g)return;
+  g.innerHTML=ALARMS.map((a,i)=>`
+    <div class="alarm-card ${a.on?'active-alarm':''}">
+      <div class="alarm-icon">${a.icon}</div>
+      <div class="alarm-info">
+        <div class="alarm-name">${a.name}</div>
+        <input type="time" class="alarm-time-input" value="${a.time}" onchange="updateAlarmTime(${i},this.value)" onclick="event.stopPropagation()"/>
+      </div>
+      <label class="alarm-toggle"><input type="checkbox" ${a.on?'checked':''} onchange="toggleAlarm(${i},this.checked)"/><span class="aslider"></span></label>
+    </div>`).join('');
+}
+function updateAlarmTime(i,v){ALARMS[i].time=v;if(ALARMS[i].on){clearAlarmTimer(ALARMS[i].id);scheduleAlarm(ALARMS[i]);}saveAlarmState();renderAlarms();}
+function toggleAlarm(i,on){
+  ALARMS[i].on=on;
+  if(on){
+    if(Notification.permission!=='granted'){Notification.requestPermission().then(p=>{if(p==='granted'){scheduleAlarm(ALARMS[i]);toast(`✅ ${ALARMS[i].name} alarmı — ${ALARMS[i].time}`);}else{ALARMS[i].on=false;renderAlarms();toast('⚠️ Bildirim izni gerekli!');}});}
+    else{scheduleAlarm(ALARMS[i]);toast(`✅ ${ALARMS[i].name} — ${ALARMS[i].time}`);}
+  }else{clearAlarmTimer(ALARMS[i].id);toast(`🔕 ${ALARMS[i].name} kapatıldı`);}
+  saveAlarmState();renderAlarms();
+}
+function scheduleAlarm(alarm){
+  clearAlarmTimer(alarm.id);
+  function next(){
+    const now=new Date(),t=new Date(now);
+    const[h,m]=alarm.time.split(':').map(Number);
+    t.setHours(h,m,0,0);if(t<=now)t.setDate(t.getDate()+1);
+    alarmTimers[alarm.id]=setTimeout(()=>{if(alarm.on){fireNotif(alarm);next();}},t-now);
+  }
+  next();
+}
+function fireNotif(alarm){
+  if(Notification.permission==='granted')new Notification(`🍽️ ${alarm.name} Vakti!`,{body:`FitPlan: ${alarm.name} zamanı — ${alarm.time}`,icon:'icon-192.png',tag:alarm.id});
+  toast(`🔔 ${alarm.name} vakti! — ${alarm.time}`);
+}
+function clearAlarmTimer(id){if(alarmTimers[id]){clearTimeout(alarmTimers[id]);delete alarmTimers[id];}}
+function restoreAlarms(){ALARMS.forEach(a=>{if(a.on&&Notification.permission==='granted')scheduleAlarm(a);});}
+
+// ═══ MEALS ═══
+function selMeal(i,btn){
+  curMeal=i;
+  document.querySelectorAll('.dmb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMeals(i);
+}
+function renderMeals(i){
+  const c=document.getElementById('mcards');
+  c.innerHTML=MEALS[i].meals.map(m=>`
+    <div class="mcard">
+      <div class="mchdr" style="background:${m.bg}"><div class="mbadge" style="background:rgba(255,255,255,.7)">${m.icon}</div>
+      <div><div class="mctit">${m.label}</div><div class="mckcal">${m.kcal}</div></div></div>
+      <div class="mcbody">${m.food}</div>
+    </div>`).join('')+
+    `<div class="nightbanner"><div class="nbtit">🫐 Gece Atıştırması (Her Gün)</div>
+    <div class="nbsub">Süzme yoğurt (150g) + Donmuş orman meyveleri + Tarçın</div></div>`;
+}
+
+// ═══ EXERCISE DETAIL MODAL ═══
+function openExDetail(exName, type) {
+  const html = (typeof buildExDetailHTML !== 'undefined')
+    ? buildExDetailHTML(exName, type)
+    : `<p style="color:#6B7280;text-align:center;padding:20px">Detay yükleniyor...</p>`;
+  openModal('💪 ' + exName, html);
+}
+
+// ═══ INIT ═══
+selDay(0);
+renderMeals(0);
+renderAlarms();
+restoreAlarms();
+updateStreak();
+renderWeightChart();
+renderWeightTable();
+loadMeasurements();
+renderPBTable();
+
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
